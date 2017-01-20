@@ -2,6 +2,7 @@ import os
 import wx
 import matplotlib.pyplot as plt
 import numpy as np
+from mpl_toolkits.mplot3d import axes3d
 from matplotlib import cm
 from matplotlib.figure import Figure
 from mpl_toolkits.mplot3d.axes3d import Axes3D
@@ -34,7 +35,7 @@ class MainWindow3D(wx.Panel):
         self.quote5_y = wx.StaticText(self, label = "Step:")
         
         # Creating the ComboBox fox chosing optimal graph style
-        self.plottingStyleList = ["Linear", "Polynomial", "Sinusoidal", "Exponential", "Logarythmic"]
+        self.plottingStyleList = ["Parametric Curve", "Surface", "Wire Frame", "Contour"]
                 #self.combo = wx.ComboBox(self, choices=phasesList)
         self.combo = wx.ComboBox(self, choices = self.plottingStyleList, style = wx.CB_DROPDOWN)
         # Bindingan event for combobox
@@ -154,16 +155,84 @@ class MainWindow3D(wx.Panel):
         # Clearing the axes
         self.axe.clear()
         
-        x = np.arange(-5, 5, 0.25)
-        y = np.arange(-5, 5, 0.25)
+        # We are checking whether we have a range or not
+        _from_x = self.fromCtrl_x.GetValue()
+        _to_x = self.toCtrl_x.GetValue()
+        _step_x = self.stepCtrl_x.GetValue()
+        if (_from_x == ''):
+            _from_x = '-5'
+        if (_to_x == ''):
+            _to_x = '5'
+        if (_step_x == ''):
+            _step_x = '0.25'
+        # Setting the axes values (calculation range for x)
+        x_from = float(_from_x)
+        x_to = float(_to_x)
+        x_step = float(_step_x)
+        x = np.arange(x_from, x_to, x_step)
+        
+        # The same procedure applies for y
+        # We are checking whether we have a range or not
+        _from_y = self.fromCtrl_y.GetValue()
+        _to_y = self.toCtrl_y.GetValue()
+        _step_y = self.stepCtrl_y.GetValue()
+        if (_from_y == ''):
+            _from_y = '-5'
+        if (_to_y == ''):
+            _to_y = '5'
+        if (_step_y == ''):
+            _step_y = '0.25'
+        # Setting the axes values (calculation range for y)
+        y_from = float(_from_y)
+        y_to = float(_to_y)
+        y_step = float(_step_y)
+        y = np.arange(y_from, y_to, y_step)
+        
+        #x = np.arange(-5, 5, 0.25)
+        #y = np.arange(-5, 5, 0.25)
+        # Forming a grid
         x, y = np.meshgrid(x, y)
         #R = np.sqrt(X**2 + Y**2)
         #Z = np.sin(R)
-        # getting value from the function given
-        z_xy = self.editFunction.GetValue()
-        surf = self.axe.plot_surface(x, y, np.sin(eval(z_xy)), rstride=1, cstride=1, cmap=cm.coolwarm,
-                linewidth=0, antialiased=False)
-        self.axe.set_zlim3d(-1.01, 1.01)
+        
+        # For chosing between graph styles
+        if (j == 0):
+            theta = np.linspace(-4 * np.pi, 4 * np.pi, 100)
+            z = np.linspace(-2, 2, 100)
+            r = z**2 + 1
+            x = r * np.sin(theta)
+            y = r * np.cos(theta)
+            self.axe.plot(x, y, z, label='Parametric curve')
+            self.axe.legend()
+
+        elif (j == 1):
+            # Getting value from the function given
+            z_xy = self.editFunction.GetValue()
+            surf = self.axe.plot_surface(x, y, np.sin(eval(z_xy)), rstride=1, cstride=1, cmap=cm.coolwarm,
+                    linewidth=0, antialiased=False)
+            self.axe.set_zlim3d(-1.01, 1.01)
+        elif (j == 2):
+
+            X, Y, Z = axes3d.get_test_data(0.1)
+            self.axe.plot_wireframe(X, Y, Z, rstride=5, cstride=5)
+
+            for angle in range(0, 360):
+                self.axe.view_init(30, angle)
+                self.figurecanvas.draw()
+                
+        elif (j == 3):
+            X, Y, Z = axes3d.get_test_data(0.05)
+            self.axe.plot_surface(X, Y, Z, rstride=8, cstride=8, alpha=0.3)
+            cset = self.axe.contourf(X, Y, Z, zdir='z', offset=-100, cmap=cm.coolwarm)
+            cset = self.axe.contourf(X, Y, Z, zdir='x', offset=-40, cmap=cm.coolwarm)
+            cset = self.axe.contourf(X, Y, Z, zdir='y', offset=40, cmap=cm.coolwarm)
+
+            self.axe.set_xlabel('X')
+            self.axe.set_xlim(-40, 40)
+            self.axe.set_ylabel('Y')
+            self.axe.set_ylim(-40, 40)
+            self.axe.set_zlabel('Z')
+            self.axe.set_zlim(-100, 100)
 
         #self.figure.colorbar(surf, shrink=0.5, aspect=10)
         # Drawing a figure
@@ -177,7 +246,11 @@ class MainWindow3D(wx.Panel):
         
     # Method for shosing color of your graph
     def EvtComboBox(self, event):
-        #i = event.GetInt()
+        #if  event.GetString() == self.phasesList[0]:
+        i = event.GetInt()
+        print i
+        global j
+        j = i
         #global _color
         #_color = 'black'
         #print i
@@ -188,4 +261,3 @@ class MainWindow3D(wx.Panel):
         #elif (i == 2):
         #    _color = 'red'
         #print _color
-        return None
