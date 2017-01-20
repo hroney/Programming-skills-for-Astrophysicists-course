@@ -125,7 +125,7 @@ class MainWindow3D(wx.Panel):
         # Combining Grapth and Button Sizers
         self.mainSizer.Add(self.graphSizer, 5, wx.EXPAND)
         self.mainSizer.Add(self.buttonSizer, 1, wx.EXPAND)
-        self.SetSizer(self.mainSizer)
+        self.SetSizerAndFit(self.mainSizer)
         
             
         '''Method Summoning'''
@@ -137,6 +137,8 @@ class MainWindow3D(wx.Panel):
         self.plotButton.Bind(wx.EVT_BUTTON, self.PlotOnPress3D)
         # Summoning the method for Clearing the axes
         self.eraseButton.Bind(wx.EVT_BUTTON, self.ErasePlotOnPress)
+        # Summoning the method for Saving your plot
+        self.saveButton.Bind(wx.EVT_BUTTON, self.SavePlotOnPress)
     
     # Method for erasing your text from the TextControl (deleting the graph formula)
     def DeleteTextOnPress1(self, evt):
@@ -188,55 +190,98 @@ class MainWindow3D(wx.Panel):
         y_step = float(_step_y)
         y = np.arange(y_from, y_to, y_step)
         
-        #x = np.arange(-5, 5, 0.25)
-        #y = np.arange(-5, 5, 0.25)
-        # Forming a grid
+
         x, y = np.meshgrid(x, y)
-        #R = np.sqrt(X**2 + Y**2)
-        #Z = np.sin(R)
+        
+        # Getting value from the function given
+        z_xy = self.editFunction.GetValue()
         
         # For chosing between graph styles
         if (j == 0):
-            theta = np.linspace(-4 * np.pi, 4 * np.pi, 100)
-            z = np.linspace(-2, 2, 100)
-            r = z**2 + 1
-            x = r * np.sin(theta)
-            y = r * np.cos(theta)
-            self.axe.plot(x, y, z, label='Parametric curve')
-            self.axe.legend()
+            if (z_xy == ''):
+                theta = np.linspace(-4 * np.pi, 4 * np.pi, 100)
+                z = np.linspace(-2, 2, 100)
+                r = z**2 + 1
+                x = r * np.sin(theta)
+                y = r * np.cos(theta)
+                self.axe.plot(x, y, z, label='Parametric curve')
+                self.axe.legend()
+                # Drawing a figure
+                self.figurecanvas.draw()
+            else:
+                None
+            
+            # Drawing a figure
+            self.figurecanvas.draw()
 
         elif (j == 1):
-            # Getting value from the function given
-            z_xy = self.editFunction.GetValue()
-            surf = self.axe.plot_surface(x, y, np.sin(eval(z_xy)), rstride=1, cstride=1, cmap=cm.coolwarm,
-                    linewidth=0, antialiased=False)
-            self.axe.set_zlim3d(-1.01, 1.01)
+            if (z_xy == ''):
+                X = np.arange(-5, 5, 0.25)
+                Y = np.arange(-5, 5, 0.25)
+                X, Y = np.meshgrid(X, Y)
+                R = np.sqrt(X**2 + Y**2)
+                Z = np.sin(R)
+                surf = self.axe.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+            else:
+                #x, y = np.meshgrid(x, y)
+                # Drawing a surface
+                surf = self.axe.plot_surface(x, y, eval(z_xy), rstride=1, cstride=1, cmap=cm.coolwarm,  linewidth=0, antialiased=False)
+                self.axe.set_zlim3d(-100, 100)
+            
+            # Drawing a figure
+            self.figurecanvas.draw()
+        
+        # Drawing a wire-frame 
         elif (j == 2):
+            if (z_xy == ''):
+                X, Y, Z = axes3d.get_test_data(0.2)
+                self.axe.plot_wireframe(X, Y, Z, rstride=5, cstride=5)
 
-            X, Y, Z = axes3d.get_test_data(0.1)
-            self.axe.plot_wireframe(X, Y, Z, rstride=5, cstride=5)
-
-            for angle in range(0, 360):
-                self.axe.view_init(30, angle)
-                self.figurecanvas.draw()
+                for angle in range(0, 360):
+                    self.axe.view_init(30, angle)
+                    self.figurecanvas.draw()
+            else:
+                self.axe.plot_wireframe(x, y, eval(z_xy), rstride=5, cstride=5)
                 
+                for angle in range(0, 360):
+                    self.axe.view_init(30, angle)
+                    self.figurecanvas.draw()
+        
+        # Drawing a surface contour        
         elif (j == 3):
-            X, Y, Z = axes3d.get_test_data(0.05)
-            self.axe.plot_surface(X, Y, Z, rstride=8, cstride=8, alpha=0.3)
-            cset = self.axe.contourf(X, Y, Z, zdir='z', offset=-100, cmap=cm.coolwarm)
-            cset = self.axe.contourf(X, Y, Z, zdir='x', offset=-40, cmap=cm.coolwarm)
-            cset = self.axe.contourf(X, Y, Z, zdir='y', offset=40, cmap=cm.coolwarm)
+            if (z_xy == ''):
+                
+                X, Y, Z = axes3d.get_test_data(0.05)
+                self.axe.plot_surface(X, Y, Z, rstride=8, cstride=8, alpha=0.3)
+                cset = self.axe.contourf(X, Y, Z, zdir='z', offset=-100, cmap=cm.coolwarm)
+                cset = self.axe.contourf(X, Y, Z, zdir='x', offset=-40, cmap=cm.coolwarm)
+                cset = self.axe.contourf(X, Y, Z, zdir='y', offset=40, cmap=cm.coolwarm)
 
-            self.axe.set_xlabel('X')
-            self.axe.set_xlim(-40, 40)
-            self.axe.set_ylabel('Y')
-            self.axe.set_ylim(-40, 40)
-            self.axe.set_zlabel('Z')
-            self.axe.set_zlim(-100, 100)
+                self.axe.set_xlabel('X')
+                self.axe.set_xlim(-40, 40)
+                self.axe.set_ylabel('Y')
+                self.axe.set_ylim(-40, 40)
+                self.axe.set_zlabel('Z')
+                self.axe.set_zlim(-100, 100)
+            else:
+                #X, Y, Z = axes3d.get_test_data(0.05)
+                self.axe.plot_surface(x, y, eval(z_xy), rstride=8, cstride=8, alpha=0.3)
+                cset = self.axe.contourf(x, y, eval(z_xy), zdir='z', offset=-100, cmap=cm.coolwarm)
+                cset = self.axe.contourf(x, y, eval(z_xy), zdir='x', offset=-40, cmap=cm.coolwarm)
+                cset = self.axe.contourf(x, y, eval(z_xy), zdir='y', offset=40, cmap=cm.coolwarm)
+
+                self.axe.set_xlabel('X')
+                self.axe.set_xlim(x_from, x_to)
+                self.axe.set_ylabel('Y')
+                self.axe.set_ylim(y_from, y_to)
+                self.axe.set_zlabel('Z')
+                self.axe.set_zlim(-100, 100)
+            
+            # Drawing a figure
+            self.figurecanvas.draw()
 
         #self.figure.colorbar(surf, shrink=0.5, aspect=10)
-        # Drawing a figure
-        self.figurecanvas.draw()
+
         
     # Method for erasing the plotted graph
     def ErasePlotOnPress(self, evt):
@@ -244,20 +289,17 @@ class MainWindow3D(wx.Panel):
         self.axe.clear()
         self.figurecanvas.draw() # basically, we draw the "empty" graph
         
+    # Method for saving your graph
+    def SavePlotOnPress(self, evt):
+        
+        self.figure.savefig('test name3D.jpg', dpi=400)
+        
     # Method for shosing color of your graph
     def EvtComboBox(self, event):
-        #if  event.GetString() == self.phasesList[0]:
+        # Getting the id of the graph from ComboBox
         i = event.GetInt()
-        print i
-        global j
-        j = i
-        #global _color
-        #_color = 'black'
         #print i
-        #if (i == 0):
-        #    _color = 'black'
-        #elif (i == 1):
-        #    _color = 'green'
-        #elif (i == 2):
-        #    _color = 'red'
-        #print _color
+        # Creating a global variable which can be used everwhere
+        global j
+        # Passing the id
+        j = i

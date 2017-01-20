@@ -232,19 +232,20 @@ class MainWindow2D(wx.Panel):
         self.figurecanvas.draw() # basically, we draw the "empty" graph
         
     def SavePlotOnPress(self, evt):
-        self.axe.savefig('filename.jpg', dpi=300)
+        #self.axe.savefig('filename.jpg', dpi=300)
+        self.figure.savefig('test name.jpg', dpi=400)
         
-    def OnAbout(self, e):
-        # A message dialog box with an OK button
-        dlg = wx.MessageDialog(self,"About FP", "Final project for Computer skills class", wx.OK)
-        # Show it
-        dlg.ShowModal()
+#    def OnAbout(self, e):
+#        # A message dialog box with an OK button
+#        dlg = wx.MessageDialog(self,"About FP", "Final project for Computer skills class", wx.OK)
+#        # Show it
+#        dlg.ShowModal()
         # Destroying after finishing
-        dlg.Destroy
+#        dlg.Destroy
     
     # Method for closing the frame
-    def OnExit(self, e):
-        self.Close(True)
+#    def OnExit(self, e):
+#        self.Close(True)
         
 #class MyApp(wx.App):
 #    def OnInit(self):
