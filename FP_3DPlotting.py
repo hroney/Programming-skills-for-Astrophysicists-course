@@ -1,5 +1,6 @@
 import os
 import wx
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import axes3d
@@ -7,6 +8,7 @@ from matplotlib import cm
 from matplotlib.figure import Figure
 from mpl_toolkits.mplot3d.axes3d import Axes3D
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+#matplotlib.use('Qt4Agg')
 
 
 
@@ -20,6 +22,7 @@ class MainWindow3D(wx.Panel):
         self.axe = self.figure.add_subplot(111, projection='3d')
         # Creating the canvas for graph
         self.figurecanvas = FigureCanvas(self, -1, self.figure)
+        #self.figurecanvas.Axes3D.mouse_init()
         
         # Creating the "Label", which shows you static text
         self.quote0 = wx.StaticText(self, label = "Please, choose your drawing style:")
@@ -33,6 +36,7 @@ class MainWindow3D(wx.Panel):
         self.quote3_y = wx.StaticText(self, label = "y: from")
         self.quote4_y = wx.StaticText(self, label = "to")
         self.quote5_y = wx.StaticText(self, label = "Step:")
+        # Quotes for parametric curve
         
         # Creating the ComboBox fox chosing optimal graph style
         self.plottingStyleList = ["Parametric Curve", "Surface", "Wire Frame", "Contour"]
@@ -65,6 +69,16 @@ class MainWindow3D(wx.Panel):
         # Creating a button which will save your graph
         self.saveButton = wx.Button(self, label = "Save", size = (-1, -1))
         
+        '''These are for Parametric curve'''
+        # Not used yet
+        '''self.editFunctionX = wx.TextCtrl(self, value = "", size = (-1, -1))
+        self.editFunctionY = wx.TextCtrl(self, value = "", size = (-1, -1))
+        # Setting a third and fourth lines if parametriccurve is chosen
+        self.sizer3parametric = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer4parametric = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer3parametric.Add(self.editFunctionX, proportion = 0, border = 2, flag = wx.ALL)
+        self.sizer4parametric.Add(self.editFunctionY, proportion = 2, border = 2, flag = wx.ALL)'''
+        
         # Setting a main sizeer
         self.mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         # Setting a graph sizer
@@ -76,7 +90,7 @@ class MainWindow3D(wx.Panel):
         # Setting a firstline horizontal sizer
         self.sizer1 = wx.BoxSizer(wx.HORIZONTAL)
         # Setting a secondline horizontal sizer
-        self.sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer2 = wx.BoxSizer(wx.HORIZONTAL) 
         # Setting the fourthline - range for x
         self.sizer3 = wx.BoxSizer(wx.HORIZONTAL)
         # Setting the fourthline - range for y
@@ -127,7 +141,6 @@ class MainWindow3D(wx.Panel):
         self.mainSizer.Add(self.buttonSizer, 1, wx.EXPAND)
         self.SetSizerAndFit(self.mainSizer)
         
-            
         '''Method Summoning'''
         # Summoning the method for Erasing Formulas' text
         self.deleteTextButton1.Bind(wx.EVT_BUTTON, self.DeleteTextOnPress1)
@@ -156,6 +169,7 @@ class MainWindow3D(wx.Panel):
         self.figure.set_canvas(self.figurecanvas)
         # Clearing the axes
         self.axe.clear()
+        self.axe.mouse_init()
         
         # We are checking whether we have a range or not
         _from_x = self.fromCtrl_x.GetValue()
@@ -195,23 +209,37 @@ class MainWindow3D(wx.Panel):
         
         # Getting value from the function given
         z_xy = self.editFunction.GetValue()
+        # Creating the name of the figure to be able to save it properly
+        global figureName
+        figureName = 'f(x, y)=' + z_xy
         
+        # Setting Up Axes
+        self.axe.set_xlabel('X')
+        self.axe.set_ylabel('Y')
+        self.axe.set_zlabel('Z')
         # For chosing between graph styles
+        # This one is for parametric curve (we two parameters - r and theta)
         if (j == 0):
             if (z_xy == ''):
                 theta = np.linspace(-4 * np.pi, 4 * np.pi, 100)
-                z = np.linspace(-2, 2, 100)
-                r = z**2 + 1
-                x = r * np.sin(theta)
-                y = r * np.cos(theta)
-                self.axe.plot(x, y, z, label='Parametric curve')
+                Z = np.linspace(-2, 2, 100)
+                r = Z**2 + 1
+                X = r * np.sin(theta)
+                Y = r * np.cos(theta)
+                self.axe.plot(X, Y, Z, label='Parametric curve')
+                #self.axe.set_xlabel('X')
                 self.axe.legend()
                 # Drawing a figure
-                self.figurecanvas.draw()
+                #self.figurecanvas.draw()
             else:
-                None
+                x = r * np.sin(theta)
+                y = r * np.cos(theta)
+                self.axe.plot(x, y, eval(z_xy), label='Parametric curve')
             
             # Drawing a figure
+            #self.axe.set_xlabel('X')
+            #self.axe.set_ylabel('Y')
+            #self.axe.set_zlabel('Z')
             self.figurecanvas.draw()
 
         elif (j == 1):
@@ -257,11 +285,11 @@ class MainWindow3D(wx.Panel):
                 cset = self.axe.contourf(X, Y, Z, zdir='x', offset=-40, cmap=cm.coolwarm)
                 cset = self.axe.contourf(X, Y, Z, zdir='y', offset=40, cmap=cm.coolwarm)
 
-                self.axe.set_xlabel('X')
+                #self.axe.set_xlabel('X')
                 self.axe.set_xlim(-40, 40)
-                self.axe.set_ylabel('Y')
+                #self.axe.set_ylabel('Y')
                 self.axe.set_ylim(-40, 40)
-                self.axe.set_zlabel('Z')
+                #self.axe.set_zlabel('Z')
                 self.axe.set_zlim(-100, 100)
             else:
                 #X, Y, Z = axes3d.get_test_data(0.05)
@@ -270,11 +298,11 @@ class MainWindow3D(wx.Panel):
                 cset = self.axe.contourf(x, y, eval(z_xy), zdir='x', offset=-40, cmap=cm.coolwarm)
                 cset = self.axe.contourf(x, y, eval(z_xy), zdir='y', offset=40, cmap=cm.coolwarm)
 
-                self.axe.set_xlabel('X')
+                #self.axe.set_xlabel('X')
                 self.axe.set_xlim(x_from, x_to)
-                self.axe.set_ylabel('Y')
+                #self.axe.set_ylabel('Y')
                 self.axe.set_ylim(y_from, y_to)
-                self.axe.set_zlabel('Z')
+                #self.axe.set_zlabel('Z')
                 self.axe.set_zlim(-100, 100)
             
             # Drawing a figure
@@ -291,15 +319,21 @@ class MainWindow3D(wx.Panel):
         
     # Method for saving your graph
     def SavePlotOnPress(self, evt):
-        
-        self.figure.savefig('test name3D.jpg', dpi=400)
+        self.figure.savefig(figureName + '.jpg', dpi=400)
         
     # Method for shosing color of your graph
     def EvtComboBox(self, event):
         # Getting the id of the graph from ComboBox
-        i = event.GetInt()
-        #print i
+        i = event.GetInt()   
+            
         # Creating a global variable which can be used everwhere
         global j
         # Passing the id
         j = i
+        
+        #if (i == 0):
+        #    self.buttonSizer.Add(self.sizer3parametric, 0, wx.ALIGN_LEFT)
+        #    self.buttonSizer.Add(self.sizer4parametric, 0, wx.ALIGN_LEFT)
+        #else:
+        #    self.buttonSizer.Delete(self.sizer3parametric, 0, wx.ALIGN_LEFT)
+        #    self.buttonSizer.Delete(self.sizer4parametric, 0, wx.ALIGN_LEFT)

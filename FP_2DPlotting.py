@@ -217,6 +217,9 @@ class MainWindow2D(wx.Panel):
         x = np.arange(x_from, x_to, x_step)
         # Converting what is written in our Box into formulas
         f_x = self.editFunction.GetValue()
+        # Creating the global variable to be able saving properly the image
+        global figureName
+        figureName = 'f(x)=' + f_x
         # Drawing our plot
         self.axe.set_xlabel('X') # setting the label on X-Axis
         self.axe.set_ylabel('Y') # setting the label on Y-Axis
@@ -231,9 +234,10 @@ class MainWindow2D(wx.Panel):
         self.axe.clear()
         self.figurecanvas.draw() # basically, we draw the "empty" graph
         
+    # Method for saving your graph
     def SavePlotOnPress(self, evt):
-        #self.axe.savefig('filename.jpg', dpi=300)
-        self.figure.savefig('test name.jpg', dpi=400)
+        print figureName
+        self.figure.savefig(figureName + '.jpg', dpi=400)
         
 #    def OnAbout(self, e):
 #        # A message dialog box with an OK button
